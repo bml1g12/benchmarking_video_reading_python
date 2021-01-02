@@ -1,0 +1,6 @@
+,groupname,time_per_frame,stddev_for_all_frames,fps,time_for_all_frames
+0,serial,0.0272,0.0903,36.7604546952406,27.2
+2,naive_mp_queue,0.0082,0.1353,122.073820676841,8.2
+4,shared_memory_array_with_pipes,0.0027,0.0521,371.321873319189,2.7
+3,shared_memory_array,0.0027,0.0211,371.472439118462,2.7
+1,multithreaded_queue,0.0021,0.0206,484.256401783373,2.1

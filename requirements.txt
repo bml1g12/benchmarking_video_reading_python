@@ -1,0 +1,10 @@
+pylint
+pytest
+flake8
+pylint_quotes
+numpy==1.18.1
+opencv-python==4.1.2.30
+tqdm==4.42.1
+pandas==1.0.1
+imutils==0.5.3
+vidgear==0.1.9
