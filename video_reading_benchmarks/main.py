@@ -19,13 +19,13 @@ def main():
     config = {
         "video_path":
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
-                "assets/20200901_100748_08E4.mkv")),
+                "assets/video_720x480.mkv")),
         "n_frames": 1000,
         "repeats": 1,
         "resize_shape": False,# (320, 240),
         "show_img": False,
         "downsample": 1,
-        "consumer_blocking_config": {"io_limited": False,
+        "consumer_blocking_config": {"io_limited": True,
                                      "duration": 0.005},
     }
     #buffer_size:  if a buffer is used, how many images can it store at max.
