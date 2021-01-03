@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import timing
-from imutils.video import count_frames
+import pandas as pd
+
 
 import video_reading_benchmarks
 from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benchmark,\
@@ -11,6 +12,14 @@ from video_reading_benchmarks.shared import patch_threading_excepthook
 
 _TIME = timing.get_timing_group(__name__)
 
+def count_frames(config):
+    from imutils.video import count_frames
+    print("counting frames in input")
+    frame_count = count_frames(config["video_path"])
+    print("frames counted: ", frame_count)
+    assert (config["n_frames"] * config[
+        "downsample"]) <= frame_count, "The provided video must have at least n_frames"
+    return frame_count
 
 def main():
     print("enabling threading patch")
@@ -21,20 +30,16 @@ def main():
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
                 "assets/video_720x480.mkv")),
         "n_frames": 1000,
-        "repeats": 1,
+        "repeats": 3,
         "resize_shape": False,# (320, 240),
         "show_img": False,
         "downsample": 1,
         "consumer_blocking_config": {"io_limited": True,
                                      "duration": 0.005},
     }
-    #buffer_size:  if a buffer is used, how many images can it store at max.
 
-    #print("counting frames in input")
-    #frame_count = count_frames(config["video_path"])
-    #print("frames counted: ", frame_count)
-    #assert (config["n_frames"] * config[
-    #    "downsample"]) <= frame_count, "The provided video must have at least n_frames"
+    #count_frames(config)
+
     metagroupname = "video_reading_benchmarks.benchmarks"
 
     print("Starting baseline baseline_benchmark")
@@ -58,6 +63,12 @@ def main():
                                times_calculated_over_n_frames=config["n_frames"]))
     timings.append(get_timings(metagroupname, "camgears_with_queue_benchmark",
                                times_calculated_over_n_frames=config["n_frames"]))
+    df = pd.DataFrame(timings)
+    if config["consumer_blocking_config"]["io_limited"]:
+        filename = "timings/benchmark_timings_iolimited.csv"
+    else:
+        filename = "timings/benchmark_timings_cpulimited.csv"
+    df.to_csv(filename)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,5 @@
-,groupname,time_per_frame,stddev_for_all_frames,fps,time_for_all_frames
-0,serial,0.0272,0.0903,36.7604546952406,27.2
-2,naive_mp_queue,0.0082,0.1353,122.073820676841,8.2
-4,shared_memory_array_with_pipes,0.0027,0.0521,371.321873319189,2.7
-3,shared_memory_array,0.0027,0.0211,371.472439118462,2.7
-1,multithreaded_queue,0.0021,0.0206,484.256401783373,2.1
+,groupname,time_per_frame,time_for_all_frames,stddev_for_all_frames,fps
+0,baseline_benchmark,0.0026,2.5797261813349905,3.6474,387.63803974052274
+1,imutils_benchmark,0.0054,5.396403688335947,0.0261,185.3085976798677
+2,camgears_benchmark,0.0052,5.208369558000413,0.0076,191.9986646231605
+3,camgears_with_queue_benchmark,0.0053,5.343358552000912,0.0036,187.14821217182455

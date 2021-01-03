@@ -245,12 +245,12 @@ class CamGear: #pylint: disable = too-many-instance-attributes
             if self.__terminate:
                 break
 
-            if self.__threaded_queue_mode:
-                # check queue buffer for overflow
-                if self.__queue.qsize() >= self.buffer_size:
-                    # stop iterating if overflowing occurs
-                    time.sleep(0.000001)
-                    continue
+            #if self.__threaded_queue_mode:
+            #    # check queue buffer for overflow
+            #    if self.__queue.qsize() >= self.buffer_size:
+            #        # stop iterating if overflowing occurs
+            #        time.sleep(0.000001)
+            #        continue
 
             # otherwise, read the next frame from the stream
             (grabbed, frame) = self.stream.read()

@@ -94,6 +94,7 @@ def imutils_benchmark(config, buffer_size):
                           config["consumer_blocking_config"]["duration"])
 
             frames_read += 1
+        assert frames_read == config["n_frames"]
         timer.stop()
         cap.stop()
         del img
@@ -139,6 +140,7 @@ def camgears_benchmark(config, buffer_size):
                           config["consumer_blocking_config"]["duration"])
 
             frames_read += 1
+        assert frames_read == config["n_frames"]
         timer.stop()
         cap.stop()
         del img
@@ -182,6 +184,7 @@ def camgears_with_queue_benchmark(config, buffer_size):
                           config["consumer_blocking_config"]["duration"])
 
             frames_read += 1
+        assert frames_read == config["n_frames"]
         timer.stop()
         cap.stop()
         del img
@@ -199,16 +202,16 @@ def camgears_with_queue_benchmark(config, buffer_size):
 if __name__ == "__main__":
     config = {
         "video_path":
-            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath("assets/20200901_100748_08E4.mkv")),
-        "n_frames": 900,
-        "repeats": 1,
+            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath("assets/video_720x480.mkv")),
+        "n_frames": 1000,
+        "repeats": 3,
         "resize_shape": False,#(320, 240),
-        "show_img": True,
+        "show_img": False,
         "downsample": 1,
         "consumer_blocking_config": {"io_limited": False,
-                                     "duration": 0.001},
+                                     "duration": 0.005},
     }
     #baseline_benchmark(config)
-    #imutils_benchmark(config, 128)
-    #camgears_benchmark(config,96)
-    camgears_with_queue_benchmark(config,96)
+    imutils_benchmark(config, 96)
+    #camgears_benchmark(config, 96)
+    #camgears_with_queue_benchmark(config, 96)
