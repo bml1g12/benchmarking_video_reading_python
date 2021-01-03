@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import timing
 from tqdm import tqdm
+import decord
 
 import video_reading_benchmarks
 from video_reading_benchmarks.camgear.camgear import CamGear
@@ -17,6 +18,7 @@ from video_reading_benchmarks.multiproc.mulitprocreader import read_video_worker
     get_video_shape
 # from vidgear.gears import CamGear
 from video_reading_benchmarks.shared import blocking_call, tranform_tmp
+from decord import VideoLoader
 
 _TIME = timing.get_timing_group(__name__)
 
@@ -202,6 +204,7 @@ def _prepare_shared_memory(np_arr_shape):
     shared_memory = (mp_array, np_array)
     return shared_memory
 
+
 def multiproc_benchmark(config):
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "multiproc_benchmark"
@@ -242,21 +245,131 @@ def multiproc_benchmark(config):
     cv2.destroyAllWindows()
 
 
+def decord_sequential_cpu_benchmark(config):
+    device = "cpu"
+    if device == "gpu":
+        ctx = decord.gpu(0)
+    else:
+        ctx = decord.cpu()
+
+    vr = decord.VideoReader(config["video_path"], ctx)
+    assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
+                                            "decord_sequential_cpu_benchmark; note it has inbuilt" \
+                                            "support for this. "
+    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
+                                      "" \
+                                      "to sample frames every N frames" \
+                                      " https://github.com/dmlc/decord#videoloader" \
+                                      "Also the video reader has vr.skip_frames(N) function"
+    # vr = decord.VideoReader(config["video_path"], ctx,
+    #                        width=resize_width,
+    #                        height=resize_height)
+
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        frames_read = 0
+        with tqdm(total=config["n_frames"]) as pbar:
+            while frames_read < config["n_frames"]:
+                try:
+                    img = vr.next()
+                except StopIteration:
+                    break
+
+                img = cv2.cvtColor(img.asnumpy(), cv2.COLOR_BGR2RGB)
+
+                if config["show_img"]:
+                    cv2.imshow("img", img)
+                    k = cv2.waitKey(1)
+                    if ord("q") == k:
+                        break
+
+                blocking_call(config["consumer_blocking_config"]["io_limited"],
+                              config["consumer_blocking_config"]["duration"])
+
+                frames_read += 1
+                pbar.update()
+        assert frames_read == config["n_frames"]
+        timer.stop()
+        del img
+        del vr
+        vr = decord.VideoReader(config["video_path"], ctx)
+
+
+def decord_batch_cpu_benchmark(config, buffer_size):
+    device = "cpu"
+    if device == "gpu":
+        ctx = decord.gpu(0)
+    else:
+        ctx = decord.cpu()
+
+    np_arr_shape = get_video_shape(config["video_path"])
+
+    video_loader = decord.VideoLoader([config["video_path"]], ctx,
+                                      shape=(buffer_size, *np_arr_shape),
+                                      interval=1, skip=1, shuffle=0)
+
+    assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
+                                            "decord_sequential_cpu_benchmark; note it has inbuilt" \
+                                            "support for this. "
+    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
+                                      "" \
+                                      "to sample frames every N frames" \
+                                      " https://github.com/dmlc/decord#videoloader" \
+                                      "Also the video reader has vr.skip_frames(N) function"
+
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        frames_read = 0
+        with tqdm(total=config["n_frames"]) as pbar:
+            for batch in video_loader:
+                if frames_read >= config["n_frames"]:
+                    break
+
+                data = batch[0].asnumpy()
+                for img in data:
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+                    if config["show_img"]:
+                        cv2.imshow("img", img)
+                        k = cv2.waitKey(1)
+                        if ord("q") == k:
+                            break
+
+                    blocking_call(config["consumer_blocking_config"]["io_limited"],
+                                  config["consumer_blocking_config"]["duration"])
+
+                    frames_read += 1
+                    pbar.update()
+                    if frames_read >= config["n_frames"]:
+                        break
+
+        assert frames_read == config["n_frames"]
+        timer.stop()
+        video_loader.reset()
+        del img
+        del video_loader
+        video_loader = decord.VideoLoader([config["video_path"]], ctx,
+                                          shape=(buffer_size, *np_arr_shape),
+                                          interval=1, skip=1, shuffle=0)
+
 
 if __name__ == "__main__":
     config = {
         "video_path":
-            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath("assets/video_720x480.mkv")),
+            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
+                "assets/video_720x480.mkv")),
         "n_frames": 1000,
-        "repeats": 3,
-        "resize_shape": False,#(320, 240),
-        "show_img": True,
+        "repeats": 1,
+        "resize_shape": False,  # (320, 240),
+        "show_img": False,
         "downsample": 1,
         "consumer_blocking_config": {"io_limited": False,
                                      "duration": 0.005},
     }
-    #baseline_benchmark(config)
-    #imutils_benchmark(config, 96)
-    #camgears_benchmark(config, 96)
-    #camgears_with_queue_benchmark(config, 96)
-    multiproc_benchmark(config)
+    # baseline_benchmark(config)
+    # imutils_benchmark(config, 96)
+    # camgears_benchmark(config, 96)
+    # camgears_with_queue_benchmark(config, 96)
+    # multiproc_benchmark(config)
+    # decord_sequential_cpu_benchmark(config)
+    decord_batch_cpu_benchmark(config, 96)

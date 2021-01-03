@@ -6,7 +6,8 @@ import pandas as pd
 
 import video_reading_benchmarks
 from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benchmark,\
-    camgears_benchmark, camgears_with_queue_benchmark, multiproc_benchmark
+    camgears_benchmark, camgears_with_queue_benchmark, multiproc_benchmark,\
+    decord_sequential_cpu_benchmark, decord_batch_cpu_benchmark
 from video_reading_benchmarks.shared import get_timings
 from video_reading_benchmarks.shared import patch_threading_excepthook
 
@@ -52,6 +53,13 @@ def main():
         print("Starting multiproc_benchmark")
         multiproc_benchmark(config)
 
+        print("Starting decord_sequential_benchmark")
+        decord_sequential_cpu_benchmark(config)
+        # TODO: test GPU functionality of decord
+
+        print("Starting decord_batch_cpu_benchmark")
+        decord_batch_cpu_benchmark(config, buffer_size=96)
+
         print("Starting imutils_benchmark")
         imutils_benchmark(config, buffer_size=96)
 
@@ -65,6 +73,10 @@ def main():
         timings.append(get_timings(metagroupname, "baseline_benchmark",
                                    times_calculated_over_n_frames=config["n_frames"]))
         timings.append(get_timings(metagroupname, "multiproc_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        timings.append(get_timings(metagroupname, "decord_sequential_cpu_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        timings.append(get_timings(metagroupname, "decord_batch_cpu_benchmark",
                                    times_calculated_over_n_frames=config["n_frames"]))
         timings.append(get_timings(metagroupname, "imutils_benchmark",
                                    times_calculated_over_n_frames=config["n_frames"]))
