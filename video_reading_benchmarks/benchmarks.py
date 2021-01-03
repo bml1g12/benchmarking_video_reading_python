@@ -51,13 +51,13 @@ def baseline_benchmark(config):
                 output_frames_returned += 1
                 pbar.update()
 
-
+        assert output_frames_returned == config["n_frames"]
         timer.stop()
         cap.release()
         del img
         del cap
         # recreate for next repeat
-        cap = cv2.VideoCapture()
+        cap = cv2.VideoCapture(config["video_path"])
     del cap
     cv2.destroyAllWindows()
 

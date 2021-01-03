@@ -34,10 +34,11 @@ def main():
         "resize_shape": False,# (320, 240),
         "show_img": False,
         "downsample": 1,
-        "consumer_blocking_config": {"io_limited": True,
+        "consumer_blocking_config": {"io_limited": False,
                                      "duration": 0.005},
     }
 
+    print("Is IO Limited benchmark?", config["consumer_blocking_config"]["io_limited"])
     #count_frames(config)
 
     metagroupname = "video_reading_benchmarks.benchmarks"
