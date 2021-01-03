@@ -9,6 +9,9 @@ from imutils.video import FileVideoStream
 from video_reading_benchmarks.imutils.custom_filevideostream import FileVideoStreamWithDownsampling
 from tqdm import tqdm
 from video_reading_benchmarks.camgear.camgear import CamGear
+from video_reading_benchmarks.camgear.camgear_queue import CamGear as CamGearWithQueue
+#from vidgear.gears import CamGear
+from video_reading_benchmarks.shared import blocking_call
 
 import video_reading_benchmarks
 
@@ -41,6 +44,9 @@ def baseline_benchmark(config):
                     k = cv2.waitKey(1)
                     if ord("q") == k:
                         break
+
+                blocking_call(config["consumer_blocking_config"]["io_limited"],
+                              config["consumer_blocking_config"]["duration"])
 
                 output_frames_returned += 1
                 pbar.update()
@@ -83,6 +89,10 @@ def imutils_benchmark(config, buffer_size):
                 k = cv2.waitKey(1)
                 if ord("q") == k:
                     break
+
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+
             frames_read += 1
         timer.stop()
         cap.stop()
@@ -125,6 +135,9 @@ def camgears_benchmark(config, buffer_size):
                 if ord("q") == k:
                     break
 
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+
             frames_read += 1
         timer.stop()
         cap.stop()
@@ -140,17 +153,62 @@ def camgears_benchmark(config, buffer_size):
     cv2.destroyAllWindows()
 
 
+def camgears_with_queue_benchmark(config, buffer_size):
+    if config["resize_shape"]:
+        tranform_f = partial(tranform_tmp, config["resize_shape"])
+    else:
+        tranform_f = None
+
+    cap = CamGearWithQueue(source=str(config["video_path"]),
+                           transform=tranform_f,
+                           downsample=config["downsample"],
+                           buffer_size=buffer_size).start()
+
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        frames_read = 0
+        for _ in tqdm(range(config["n_frames"])):
+            img = cap.read()
+            if img is None:
+                break
+
+            if config["show_img"]:
+                cv2.imshow("img", img)
+                k = cv2.waitKey(1)
+                if ord("q") == k:
+                    break
+
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+
+            frames_read += 1
+        timer.stop()
+        cap.stop()
+        del img
+        del cap
+        # recreate for next repeat
+        cap = CamGearWithQueue(source=str(config["video_path"]),
+                               transform=tranform_f,
+                               downsample=config["downsample"],
+                               buffer_size=buffer_size).start()
+    cap.stop()
+    del cap
+    cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     config = {
         "video_path":
-            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath("assets/video.mp4")),
+            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath("assets/20200901_100748_08E4.mkv")),
         "n_frames": 900,
         "repeats": 1,
-        "resize_shape": (320, 240),
+        "resize_shape": False,#(320, 240),
         "show_img": True,
-        "downsample": 2,
+        "downsample": 1,
+        "consumer_blocking_config": {"io_limited": False,
+                                     "duration": 0.001},
     }
     #baseline_benchmark(config)
     #imutils_benchmark(config, 128)
-    camgears_benchmark(config,96)
+    #camgears_benchmark(config,96)
+    camgears_with_queue_benchmark(config,96)

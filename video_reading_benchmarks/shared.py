@@ -1,11 +1,28 @@
 """Shared functions between benchmarks"""
 
-import time
-
-import numpy as np
-import timing
 import sys
 import threading
+import time
+
+import timing
+
+
+def blocking_call(io_limited, duration=0.001):
+    """Emulating a time consuming process
+    :param float duration: how long to block for
+    :param bool is_io_limited: If True, will use time.sleep() to emulate an I/O limited producer.
+    If False will use a CPU heavy calculation to emulate a CPU limited producer.
+    """
+    if io_limited:
+        time.sleep(duration)
+    else:
+        time1 = time.time()
+        while True:
+            _ = 999*999
+            time2 = time.time()
+            if (time2-time1) > duration:
+                break
+
 
 def patch_threading_excepthook():
     """

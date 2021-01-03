@@ -5,7 +5,7 @@ from imutils.video import count_frames
 
 import video_reading_benchmarks
 from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benchmark,\
-    camgears_benchmark
+    camgears_benchmark, camgears_with_queue_benchmark
 from video_reading_benchmarks.shared import get_timings
 from video_reading_benchmarks.shared import patch_threading_excepthook
 
@@ -18,12 +18,15 @@ def main():
     print("threading patch enabled")
     config = {
         "video_path":
-            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath("assets/video.mp4")),
+            str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
+                "assets/20200901_100748_08E4.mkv")),
         "n_frames": 1000,
         "repeats": 1,
         "resize_shape": False,# (320, 240),
         "show_img": False,
-        "downsample": 2,
+        "downsample": 1,
+        "consumer_blocking_config": {"io_limited": False,
+                                     "duration": 0.005},
     }
     #buffer_size:  if a buffer is used, how many images can it store at max.
 
@@ -38,10 +41,13 @@ def main():
     baseline_benchmark(config)
 
     print("Starting imutils_benchmark")
-    imutils_benchmark(config, buffer_size=128)
+    imutils_benchmark(config, buffer_size=96)
 
     print("Starting camgears_benchmark")
-    camgears_benchmark(config, buffer_size=3)
+    camgears_benchmark(config, buffer_size=96)
+
+    print("Starting camgears_with_queue_benchmark")
+    camgears_with_queue_benchmark(config, buffer_size=96)
 
     timings = []
     timings.append(get_timings(metagroupname, "baseline_benchmark",
@@ -50,6 +56,9 @@ def main():
                                times_calculated_over_n_frames=config["n_frames"]))
     timings.append(get_timings(metagroupname, "camgears_benchmark",
                                times_calculated_over_n_frames=config["n_frames"]))
+    timings.append(get_timings(metagroupname, "camgears_with_queue_benchmark",
+                               times_calculated_over_n_frames=config["n_frames"]))
+
 
 if __name__ == "__main__":
     main()
