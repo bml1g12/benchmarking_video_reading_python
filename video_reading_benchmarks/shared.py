@@ -1,11 +1,17 @@
 """Shared functions between benchmarks"""
-
+import cv2
 import sys
 import threading
 import time
 
 import timing
 
+def tranform_tmp(output_single_cam_shape_hw, img):
+    """A resizing transformation function"""
+    img = cv2.resize(img,
+                     (output_single_cam_shape_hw[0],
+                      output_single_cam_shape_hw[1]) )
+    return img
 
 def blocking_call(io_limited, duration=0.001):
     """Emulating a time consuming process

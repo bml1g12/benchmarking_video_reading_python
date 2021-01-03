@@ -6,7 +6,7 @@ import pandas as pd
 
 import video_reading_benchmarks
 from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benchmark,\
-    camgears_benchmark, camgears_with_queue_benchmark
+    camgears_benchmark, camgears_with_queue_benchmark, multiproc_benchmark
 from video_reading_benchmarks.shared import get_timings
 from video_reading_benchmarks.shared import patch_threading_excepthook
 
@@ -34,42 +34,50 @@ def main():
         "resize_shape": False,# (320, 240),
         "show_img": False,
         "downsample": 1,
-        "consumer_blocking_config": {"io_limited": False,
+        "consumer_blocking_config": {"io_limited": None,
                                      "duration": 0.005},
     }
 
-    print("Is IO Limited benchmark?", config["consumer_blocking_config"]["io_limited"])
-    #count_frames(config)
+    for is_io_limited in [False, True]:
+        config["consumer_blocking_config"]["io_limited"] = is_io_limited
+        assert isinstance(config["consumer_blocking_config"]["io_limited"], bool)
+        print("Is IO Limited benchmark?", config["consumer_blocking_config"]["io_limited"])
+        #count_frames(config)
 
-    metagroupname = "video_reading_benchmarks.benchmarks"
+        metagroupname = "video_reading_benchmarks.benchmarks"
 
-    print("Starting baseline baseline_benchmark")
-    baseline_benchmark(config)
+        print("Starting baseline baseline_benchmark")
+        baseline_benchmark(config)
 
-    print("Starting imutils_benchmark")
-    imutils_benchmark(config, buffer_size=96)
+        print("Starting multiproc_benchmark")
+        multiproc_benchmark(config)
 
-    print("Starting camgears_benchmark")
-    camgears_benchmark(config, buffer_size=96)
+        print("Starting imutils_benchmark")
+        imutils_benchmark(config, buffer_size=96)
 
-    print("Starting camgears_with_queue_benchmark")
-    camgears_with_queue_benchmark(config, buffer_size=96)
+        print("Starting camgears_benchmark")
+        camgears_benchmark(config, buffer_size=96)
 
-    timings = []
-    timings.append(get_timings(metagroupname, "baseline_benchmark",
-                               times_calculated_over_n_frames=config["n_frames"]))
-    timings.append(get_timings(metagroupname, "imutils_benchmark",
-                               times_calculated_over_n_frames=config["n_frames"]))
-    timings.append(get_timings(metagroupname, "camgears_benchmark",
-                               times_calculated_over_n_frames=config["n_frames"]))
-    timings.append(get_timings(metagroupname, "camgears_with_queue_benchmark",
-                               times_calculated_over_n_frames=config["n_frames"]))
-    df = pd.DataFrame(timings)
-    if config["consumer_blocking_config"]["io_limited"]:
-        filename = "timings/benchmark_timings_iolimited.csv"
-    else:
-        filename = "timings/benchmark_timings_cpulimited.csv"
-    df.to_csv(filename)
+        print("Starting camgears_with_queue_benchmark")
+        camgears_with_queue_benchmark(config, buffer_size=96)
+
+        timings = []
+        timings.append(get_timings(metagroupname, "baseline_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        timings.append(get_timings(metagroupname, "multiproc_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        timings.append(get_timings(metagroupname, "imutils_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        timings.append(get_timings(metagroupname, "camgears_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        timings.append(get_timings(metagroupname, "camgears_with_queue_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        df = pd.DataFrame(timings)
+        if config["consumer_blocking_config"]["io_limited"]:
+            filename = "timings/benchmark_timings_iolimited.csv"
+        else:
+            filename = "timings/benchmark_timings_cpulimited.csv"
+        df.to_csv(filename)
 
 
 if __name__ == "__main__":

@@ -1,19 +1,22 @@
 """Benchmark functions"""
 import inspect
-from pathlib import Path
+import multiprocessing as mp
 from functools import partial
+from pathlib import Path
 
 import cv2
+import numpy as np
 import timing
-from imutils.video import FileVideoStream
-from video_reading_benchmarks.imutils.custom_filevideostream import FileVideoStreamWithDownsampling
 from tqdm import tqdm
-from video_reading_benchmarks.camgear.camgear import CamGear
-from video_reading_benchmarks.camgear.camgear_queue import CamGear as CamGearWithQueue
-#from vidgear.gears import CamGear
-from video_reading_benchmarks.shared import blocking_call
 
 import video_reading_benchmarks
+from video_reading_benchmarks.camgear.camgear import CamGear
+from video_reading_benchmarks.camgear.camgear_queue import CamGear as CamGearWithQueue
+from video_reading_benchmarks.imutils.custom_filevideostream import FileVideoStreamWithDownsampling
+from video_reading_benchmarks.multiproc.mulitprocreader import read_video_worker, consume_frame, \
+    get_video_shape
+# from vidgear.gears import CamGear
+from video_reading_benchmarks.shared import blocking_call, tranform_tmp
 
 _TIME = timing.get_timing_group(__name__)
 
@@ -61,12 +64,6 @@ def baseline_benchmark(config):
     del cap
     cv2.destroyAllWindows()
 
-def tranform_tmp(output_single_cam_shape_hw, img):
-    """A resizing transformation function"""
-    img = cv2.resize(img,
-                     (output_single_cam_shape_hw[0],
-                      output_single_cam_shape_hw[1]) )
-    return img
 
 def imutils_benchmark(config, buffer_size):
     if config["resize_shape"]:
@@ -199,6 +196,53 @@ def camgears_with_queue_benchmark(config, buffer_size):
     cv2.destroyAllWindows()
 
 
+def _prepare_shared_memory(np_arr_shape):
+    mp_array = mp.Array("I", int(np.prod(np_arr_shape)), lock=mp.Lock())
+    np_array = np.frombuffer(mp_array.get_obj(), dtype="I").reshape(np_arr_shape)
+    shared_memory = (mp_array, np_array)
+    return shared_memory
+
+def multiproc_benchmark(config):
+    assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
+                                            "multiproc_benchmark"
+    np_arr_shape = get_video_shape(config["video_path"])
+    shared_memory = _prepare_shared_memory(np_arr_shape)
+    proc = mp.Process(target=read_video_worker,
+                      args=(config["video_path"], shared_memory, config["downsample"]))
+    proc.start()
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        frames_read = 0
+        for _ in tqdm(range(config["n_frames"])):
+            img = consume_frame(shared_memory)
+
+            if config["show_img"]:
+                cv2.imshow("img", img)
+                k = cv2.waitKey(1)
+                if ord("q") == k:
+                    break
+
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+
+            frames_read += 1
+
+        assert frames_read == config["n_frames"]
+        timer.stop()
+        proc.terminate()
+        del shared_memory
+        shared_memory = _prepare_shared_memory(np_arr_shape)
+        proc = mp.Process(target=read_video_worker,
+                          args=(config["video_path"],
+                                shared_memory,
+                                config["downsample"]))
+        proc.start()
+    del shared_memory
+    proc.terminate()
+    cv2.destroyAllWindows()
+
+
+
 if __name__ == "__main__":
     config = {
         "video_path":
@@ -206,12 +250,13 @@ if __name__ == "__main__":
         "n_frames": 1000,
         "repeats": 3,
         "resize_shape": False,#(320, 240),
-        "show_img": False,
+        "show_img": True,
         "downsample": 1,
         "consumer_blocking_config": {"io_limited": False,
                                      "duration": 0.005},
     }
     #baseline_benchmark(config)
-    imutils_benchmark(config, 96)
+    #imutils_benchmark(config, 96)
     #camgears_benchmark(config, 96)
     #camgears_with_queue_benchmark(config, 96)
+    multiproc_benchmark(config)

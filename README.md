@@ -19,3 +19,6 @@ Timings can be found in the ./timings folder.
 Timings are reported over 1000 frames as `time_for_all_frames` (seconds) +/- `stddev_for_all_frames` (seconds)  with this standard deviation calculatied over 3 repeats. `time_per_frame` is calculated as `time_for_all_frames`/1000 and the FPS is calculated as 1/`time_per_frame`.
 
 
+## To Do
+
+Look into https://medium.com/@haydenfaulkner/extracting-frames-fast-from-a-video-using-opencv-and-python-73b9b7dc9661 ...but it relies on the .set method of cv2.VideoCapture which is buggy https://github.com/opencv/opencv/issues/9053 unless one works around it with something like https://gist.github.com/bml1g12/e1e0af85e49bf46cccddbcf8e68a3708 I believe.
