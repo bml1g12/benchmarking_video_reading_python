@@ -2,7 +2,8 @@
 
 """
 Modified to do image transformation on the thread, downsampling and pylinting.
-Also switch to using default logger.
+Also switch to using default logger. Replaced dequeue with Queue to avoid slowdown
+when CPU limited.
 https://github.com/abhiTronix/vidgear/blob/master/vidgear/gears/camgear.py
 by Benjamin Lowe 2021
 
@@ -244,13 +245,6 @@ class CamGear: #pylint: disable = too-many-instance-attributes
             # if the thread indicator variable is set, stop the thread
             if self.__terminate:
                 break
-
-            #if self.__threaded_queue_mode:
-            #    # check queue buffer for overflow
-            #    if self.__queue.qsize() >= self.buffer_size:
-            #        # stop iterating if overflowing occurs
-            #        time.sleep(0.000001)
-            #        continue
 
             # otherwise, read the next frame from the stream
             (grabbed, frame) = self.stream.read()
