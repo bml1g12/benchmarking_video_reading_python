@@ -24,3 +24,5 @@ Timings are reported over 1000 frames as `time_for_all_frames` (seconds) +/- `st
 Look into https://medium.com/@haydenfaulkner/extracting-frames-fast-from-a-video-using-opencv-and-python-73b9b7dc9661 ...their CV2 implementation relies on the .set method of cv2.VideoCapture which is buggy https://github.com/opencv/opencv/issues/9053 unless one works around it with something like https://gist.github.com/bml1g12/e1e0af85e49bf46cccddbcf8e68a3708 I believe.
 
 Decord however looks very promising; and even has inbuilt bridges to numpy, PyTorch Tensor and Tensorflow Tensor. https://github.com/dmlc/decord#bridges-for-deep-learning-frameworks 
+
+Try PyAV  https://pyav.org/docs/develop/
