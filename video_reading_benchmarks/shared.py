@@ -13,6 +13,19 @@ def tranform_tmp(output_single_cam_shape_hw, img):
                       output_single_cam_shape_hw[1]) )
     return img
 
+def cpu_blocking_call():
+    """Block the CPU for an arbitrary number of calculations worth.
+    The number of iterations gives a roughly similar duration to 0.005 second sleep on my machine
+    but the actual number of iterations is not important as we cannot compare directly between
+    a sleep blocking call and a CPU blocking call (but we can compare between different code
+    with the same blocking call)."""
+    iterations = 0
+    while True:
+        _ = 999 * 999
+        iterations += 1
+        if iterations > 130000:
+            break
+
 def blocking_call(io_limited, duration=0.001):
     """Emulating a time consuming process
     :param float duration: how long to block for
@@ -22,12 +35,7 @@ def blocking_call(io_limited, duration=0.001):
     if io_limited:
         time.sleep(duration)
     else:
-        time1 = time.time()
-        while True:
-            _ = 999*999
-            time2 = time.time()
-            if (time2-time1) > duration:
-                break
+        cpu_blocking_call()
 
 
 def patch_threading_excepthook():

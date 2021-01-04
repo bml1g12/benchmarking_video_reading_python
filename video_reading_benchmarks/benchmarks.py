@@ -3,6 +3,7 @@ import inspect
 import multiprocessing as mp
 from functools import partial
 from pathlib import Path
+import time
 
 import cv2
 import numpy as np
@@ -19,9 +20,20 @@ from video_reading_benchmarks.multiproc.mulitprocreader import read_video_worker
 # from vidgear.gears import CamGear
 from video_reading_benchmarks.shared import blocking_call, tranform_tmp
 from decord import VideoLoader
+from video_reading_benchmarks.ffmpeg_python.test import FFMPEGStream
 import av
 
 _TIME = timing.get_timing_group(__name__)
+
+
+def max_possible_fps(config):
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=1)):
+        for _ in tqdm(range(config["n_frames"])):
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+
+        timer.stop()
 
 
 def baseline_benchmark(config):
@@ -328,7 +340,7 @@ def decord_batch_cpu_benchmark(config, buffer_size):
 
                 data = batch[0].asnumpy()
                 for img in data:
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
                     if config["show_img"]:
                         cv2.imshow("img", img)
@@ -395,7 +407,51 @@ def pyav_benchmark(config):
             assert frames_read == config["n_frames"]
             del img
 
+def ffmpeg_benchmark(config):
 
+    assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
+                                            "decord_sequential_cpu_benchmark; note it has inbuilt" \
+                                            "support for this. "
+    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
+                                      "" \
+                                      "to sample frames every N frames" \
+                                      " https://github.com/dmlc/decord#videoloader" \
+                                      "Also the video reader has vr.skip_frames(N) function"
+
+    ffmpegstream = FFMPEGStream(config["video_path"])
+    ffmpeg_raw_time_taken = []
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        time_before = time.perf_counter()
+        video = ffmpegstream.get_np_array(config["n_frames"])
+        time_after = time.perf_counter()
+
+        frames_read = 0
+        for img in tqdm(video):
+
+            if config["show_img"]:
+                cv2.imshow("img", img)
+                k = cv2.waitKey(1)
+                if ord("q") == k:
+                    break
+
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+            frames_read += 1
+
+        timer.stop()
+        assert frames_read == config["n_frames"]
+        print(f"NOTE: FFMPEG actually read the file at:"
+              f" {config['n_frames']/(time_after-time_before)}"
+              f" FPS but the resulting FPS is much lower as we then block n_frames worth on the "
+              f"consumer")
+        del ffmpegstream
+        ffmpegstream = FFMPEGStream(config["video_path"])
+        ffmpeg_raw_time_taken.append(time_after-time_before)
+
+
+    del ffmpegstream
+    return ffmpeg_raw_time_taken
 
 if __name__ == "__main__":
     config = {
@@ -410,6 +466,7 @@ if __name__ == "__main__":
         "consumer_blocking_config": {"io_limited": False,
                                      "duration": 0.005},
     }
+    # max_possible_fps(config)
     # baseline_benchmark(config)
     # imutils_benchmark(config, 96)
     # camgears_benchmark(config, 96)
@@ -417,4 +474,5 @@ if __name__ == "__main__":
     # multiproc_benchmark(config)
     # decord_sequential_cpu_benchmark(config)
     # decord_batch_cpu_benchmark(config, 96)
-    pyav_benchmark(config)
+    # pyav_benchmark(config)
+    ffmpeg_benchmark(config)
