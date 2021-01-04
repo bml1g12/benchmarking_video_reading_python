@@ -19,6 +19,7 @@ from video_reading_benchmarks.multiproc.mulitprocreader import read_video_worker
 # from vidgear.gears import CamGear
 from video_reading_benchmarks.shared import blocking_call, tranform_tmp
 from decord import VideoLoader
+import av
 
 _TIME = timing.get_timing_group(__name__)
 
@@ -353,13 +354,57 @@ def decord_batch_cpu_benchmark(config, buffer_size):
                                           interval=1, skip=1, shuffle=0)
 
 
+def pyav_benchmark(config):
+
+    assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
+                                            "decord_sequential_cpu_benchmark; note it has inbuilt" \
+                                            "support for this. "
+    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
+                                      "" \
+                                      "to sample frames every N frames" \
+                                      " https://github.com/dmlc/decord#videoloader" \
+                                      "Also the video reader has vr.skip_frames(N) function"
+
+
+
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        frames_read = 0
+        with av.open(config["video_path"]) as container:
+            stream = container.streams.video[0]
+            stream.thread_type = 'AUTO'  # FRAME
+            for img in tqdm(container.decode(stream),
+                              desc=f"Decoding",
+                              unit="f"
+                              ):
+                img.to_ndarray(format="bgr24")
+
+                if config["show_img"]:
+                    cv2.imshow("img", img)
+                    k = cv2.waitKey(1)
+                    if ord("q") == k:
+                        break
+
+                blocking_call(config["consumer_blocking_config"]["io_limited"],
+                              config["consumer_blocking_config"]["duration"])
+
+                frames_read += 1
+                if frames_read >= config["n_frames"]:
+                    break
+
+            timer.stop()
+            assert frames_read == config["n_frames"]
+            del img
+
+
+
 if __name__ == "__main__":
     config = {
         "video_path":
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
                 "assets/video_720x480.mkv")),
         "n_frames": 1000,
-        "repeats": 1,
+        "repeats": 3,
         "resize_shape": False,  # (320, 240),
         "show_img": False,
         "downsample": 1,
@@ -372,4 +417,5 @@ if __name__ == "__main__":
     # camgears_with_queue_benchmark(config, 96)
     # multiproc_benchmark(config)
     # decord_sequential_cpu_benchmark(config)
-    decord_batch_cpu_benchmark(config, 96)
+    # decord_batch_cpu_benchmark(config, 96)
+    pyav_benchmark(config)

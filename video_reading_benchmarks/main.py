@@ -7,7 +7,7 @@ import pandas as pd
 import video_reading_benchmarks
 from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benchmark,\
     camgears_benchmark, camgears_with_queue_benchmark, multiproc_benchmark,\
-    decord_sequential_cpu_benchmark, decord_batch_cpu_benchmark
+    decord_sequential_cpu_benchmark, decord_batch_cpu_benchmark, pyav_benchmark
 from video_reading_benchmarks.shared import get_timings
 from video_reading_benchmarks.shared import patch_threading_excepthook
 
@@ -50,6 +50,9 @@ def main():
         print("Starting baseline baseline_benchmark")
         baseline_benchmark(config)
 
+        print("pyav benchmark")
+        pyav_benchmark(config)
+
         print("Starting multiproc_benchmark")
         multiproc_benchmark(config)
 
@@ -71,6 +74,8 @@ def main():
 
         timings = []
         timings.append(get_timings(metagroupname, "baseline_benchmark",
+                                   times_calculated_over_n_frames=config["n_frames"]))
+        timings.append(get_timings(metagroupname, "pyav_benchmark",
                                    times_calculated_over_n_frames=config["n_frames"]))
         timings.append(get_timings(metagroupname, "multiproc_benchmark",
                                    times_calculated_over_n_frames=config["n_frames"]))
