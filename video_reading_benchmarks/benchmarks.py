@@ -28,7 +28,7 @@ _TIME = timing.get_timing_group(__name__)
 
 def max_possible_fps(config):
     for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
-                                         samples=1)):
+                                         samples=3)):
         for _ in tqdm(range(config["n_frames"])):
             blocking_call(config["consumer_blocking_config"]["io_limited"],
                           config["consumer_blocking_config"]["duration"])
