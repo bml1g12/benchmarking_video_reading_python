@@ -353,7 +353,6 @@ def decord_batch_cpu_benchmark(config, buffer_size):
                                           shape=(buffer_size, *np_arr_shape),
                                           interval=1, skip=1, shuffle=0)
 
-
 def pyav_benchmark(config):
 
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \

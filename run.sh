@@ -1,4 +1,7 @@
 #!/bin/bash
-python array_benchmark/demo_application_benchmarking/main.py 
-python array_benchmark/queue_benchmarking/main.py
+
+echo "Running IO limited benchmark"
+python video_reading_benchmarks/main.py --isiolimited
+echo "Running CPU limited benchmark"
+python video_reading_benchmarks/main.py 
 

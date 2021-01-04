@@ -65,6 +65,7 @@ def get_timings(metagroupname, groupname, times_calculated_over_n_frames):
     :rtype: dict
     """
     # mean is the time per frame in this code
+    print(metagroupname)
     timing_group = timing.get_timing_group(metagroupname)
     time_per_frame = timing_group.summary[groupname]["mean"]/times_calculated_over_n_frames
     stddev = f"{timing_group.summary[groupname]['stddev']:.4f}"
@@ -72,8 +73,10 @@ def get_timings(metagroupname, groupname, times_calculated_over_n_frames):
     print(f"{groupname}: time_for_all_frames: = {timing_group.summary[groupname]['mean']} +/- "
           f"{stddev}"
           f" or FPS = {fps}")
+
     return {"groupname": groupname,
             "time_per_frame": f"{time_per_frame:.4f}",
             "time_for_all_frames": timing_group.summary[groupname]["mean"],
             "stddev_for_all_frames": stddev,
             "fps": fps}
+
