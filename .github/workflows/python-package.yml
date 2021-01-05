@@ -29,6 +29,9 @@ jobs:
         python -m pip install -r requirements.txt
         python -m pip install -e .
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Run the benchmarks software
+      run: |
+        ./run.sh
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -37,7 +40,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Lint with pylint
       run: |
-        pylint array_benchmark/
-    - name: Run the benchmarks software
-      run: |
-        ./run.sh
+        pylint video_reading_benchmarks/
