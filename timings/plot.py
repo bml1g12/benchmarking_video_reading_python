@@ -17,7 +17,7 @@ def plot(df, title):
                     x="groupname", y="fps", palette="dark", alpha=.6, height=5, aspect=5,
                     legend=True, legend_out=True)
     plt.xlabel(title)
-    plt.savefig(title + ".pdf")
+    plt.savefig(title + ".png")
 
 
 plot(cpu, "CPU_Limited")

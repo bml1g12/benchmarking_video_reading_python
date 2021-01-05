@@ -4,11 +4,11 @@ Tested using Python 3.7.0 on Ubuntu 20.04 LTS with Intel(R) Core(TM) i7-7700HQ C
 
 Hard disk: Sequential Read - 560 MB/s CT2000MX500SSD1 Crucial MX500 2TB 3D NAND SATA 2.5 inch 7mm (with 9.5mm adapter) Internal SSD
 
-![Unblocked](timings/Unblocked.pdf)
+![Unblocked](timings/Unblocked.png)
 
-![IO Limited](timings/IO_Limited.pdf)
+![IO Limited](timings/IO_Limited.png)
 
-![CPU Limited](timings/CPU_Limited.pdf)
+![CPU Limited](timings/CPU_Limited.png)
 
 ## How To Run 
 
