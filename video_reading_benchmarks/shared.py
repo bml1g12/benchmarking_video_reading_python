@@ -27,11 +27,13 @@ def cpu_blocking_call():
             break
 
 def blocking_call(io_limited, duration=0.001):
-    """Emulating a time consuming process
+    """Emulating a time consuming process if duration is a finite value, else return instantly.
     :param float duration: how long to block for
     :param bool is_io_limited: If True, will use time.sleep() to emulate an I/O limited producer.
     If False will use a CPU heavy calculation to emulate a CPU limited producer.
     """
+    if duration == 0:
+        return
     if io_limited:
         time.sleep(duration)
     else:

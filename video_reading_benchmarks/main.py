@@ -17,6 +17,8 @@ from video_reading_benchmarks.shared import patch_threading_excepthook
 parser = argparse.ArgumentParser()
 parser.add_argument("--isiolimited", action="store_true",
                     help="whether to emulate io or cpu limited consumer")
+parser.add_argument("--duration", type=float, default=0.005,
+                    help="whether to emulate io or cpu limited consumer")
 
 _TIME = timing.get_timing_group(__name__)
 
@@ -46,6 +48,8 @@ def main():
     # patch_threading_excepthook()
     # print("threading patch enabled")
     timings = []
+
+    args = parser.parse_args()
     config = {
         "video_path":
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
@@ -56,12 +60,12 @@ def main():
         "show_img": False,
         "downsample": 1,
         "consumer_blocking_config": {"io_limited": False,
-                                     "duration": 0.005},
+                                     "duration": args.duration},
     }
 
-    args = parser.parse_args()
     config["consumer_blocking_config"]["io_limited"] = args.isiolimited
     print("Is IO Limited benchmark?", config["consumer_blocking_config"]["io_limited"])
+    print("Blocking duration: ", config["consumer_blocking_config"]["duration"])
     # count_frames(config)
 
     metagroupname = "video_reading_benchmarks.benchmarks"
@@ -122,10 +126,15 @@ def main():
                                times_calculated_over_n_frames=config["n_frames"]))
 
     df = pd.DataFrame(timings)
-    if config["consumer_blocking_config"]["io_limited"]:
-        filename = "timings/benchmark_timings_iolimited.csv"
+
+    if config["consumer_blocking_config"]["duration"] == 0:
+        string_suffix = "unblocked"
+    elif config["consumer_blocking_config"]["io_limited"]:
+        string_suffix = "iolimited"
     else:
-        filename = "timings/benchmark_timings_cpulimited.csv"
+        string_suffix = "cpulimited"
+
+    filename = f"timings/benchmark_timings_{string_suffix}.csv"
 
     df["fps"] = df["fps"].astype("float")
     df = df.sort_values("fps")

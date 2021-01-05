@@ -38,6 +38,6 @@ jobs:
     - name: Lint with pylint
       run: |
         pylint array_benchmark/
-    - name: Test with pytest
+    - name: Run the benchmarks software
       run: |
-        pytest
+        ./run.sh

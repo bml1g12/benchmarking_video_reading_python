@@ -1,27 +1,28 @@
 """Benchmark functions"""
 import inspect
 import multiprocessing as mp
+import time
 from functools import partial
 from pathlib import Path
-import time
 
+import av
 import cv2
+import decord
 import numpy as np
 import timing
 from tqdm import tqdm
-import decord
 
 import video_reading_benchmarks
 from video_reading_benchmarks.camgear.camgear import CamGear
 from video_reading_benchmarks.camgear.camgear_queue import CamGear as CamGearWithQueue
+from video_reading_benchmarks.ffmpeg_python.test import FFMPEGStream
 from video_reading_benchmarks.imutils.custom_filevideostream import FileVideoStreamWithDownsampling
 from video_reading_benchmarks.multiproc.mulitprocreader import read_video_worker, consume_frame, \
     get_video_shape
-# from vidgear.gears import CamGear
 from video_reading_benchmarks.shared import blocking_call, tranform_tmp
-from decord import VideoLoader
-from video_reading_benchmarks.ffmpeg_python.test import FFMPEGStream
-import av
+
+# from vidgear.gears import CamGear
+# from decord import VideoLoader
 
 _TIME = timing.get_timing_group(__name__)
 
@@ -265,16 +266,17 @@ def decord_sequential_cpu_benchmark(config):
     else:
         ctx = decord.cpu()
 
-    vr = decord.VideoReader(config["video_path"], ctx)
+    video_reader = decord.VideoReader(config["video_path"], ctx)
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "decord_sequential_cpu_benchmark; note it has inbuilt" \
                                             "support for this. "
-    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
-                                      "" \
+    assert config["downsample"] == 1, "TODO: implement downsampling," \
+                                      " note that decord has options " \
                                       "to sample frames every N frames" \
                                       " https://github.com/dmlc/decord#videoloader" \
-                                      "Also the video reader has vr.skip_frames(N) function"
-    # vr = decord.VideoReader(config["video_path"], ctx,
+                                      "Also the video reader has " \
+                                      "video_reader.skip_frames(N) function"
+    # video_reader = decord.VideoReader(config["video_path"], ctx,
     #                        width=resize_width,
     #                        height=resize_height)
 
@@ -284,7 +286,7 @@ def decord_sequential_cpu_benchmark(config):
         with tqdm(total=config["n_frames"]) as pbar:
             while frames_read < config["n_frames"]:
                 try:
-                    img = vr.next()
+                    img = video_reader.next()
                 except StopIteration:
                     break
 
@@ -304,8 +306,8 @@ def decord_sequential_cpu_benchmark(config):
         assert frames_read == config["n_frames"]
         timer.stop()
         del img
-        del vr
-        vr = decord.VideoReader(config["video_path"], ctx)
+        del video_reader
+        video_reader = decord.VideoReader(config["video_path"], ctx)
 
 
 def decord_batch_cpu_benchmark(config, buffer_size):
@@ -324,11 +326,12 @@ def decord_batch_cpu_benchmark(config, buffer_size):
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "decord_sequential_cpu_benchmark; note it has inbuilt" \
                                             "support for this. "
-    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
-                                      "" \
+    assert config["downsample"] == 1, "TODO: implement downsampling, " \
+                                      "note that decord has options " \
                                       "to sample frames every N frames" \
                                       " https://github.com/dmlc/decord#videoloader" \
-                                      "Also the video reader has vr.skip_frames(N) function"
+                                      "Also the video reader has" \
+                                      " video_reader.skip_frames(N) function"
 
     for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
                                          samples=config["repeats"])):
@@ -340,7 +343,7 @@ def decord_batch_cpu_benchmark(config, buffer_size):
 
                 data = batch[0].asnumpy()
                 for img in data:
-                    #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
                     if config["show_img"]:
                         cv2.imshow("img", img)
@@ -359,35 +362,38 @@ def decord_batch_cpu_benchmark(config, buffer_size):
         assert frames_read == config["n_frames"]
         timer.stop()
         video_loader.reset()
-        del img
+        try:
+            del img
+        except NameError:
+            pass
+
         del video_loader
         video_loader = decord.VideoLoader([config["video_path"]], ctx,
                                           shape=(buffer_size, *np_arr_shape),
                                           interval=1, skip=1, shuffle=0)
 
-def pyav_benchmark(config):
 
+def pyav_benchmark(config):
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "decord_sequential_cpu_benchmark; note it has inbuilt" \
                                             "support for this. "
-    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
-                                      "" \
+    assert config["downsample"] == 1, "TODO: implement downsampling, note " \
+                                      "that decord has options " \
                                       "to sample frames every N frames" \
                                       " https://github.com/dmlc/decord#videoloader" \
-                                      "Also the video reader has vr.skip_frames(N) function"
-
-
+                                      "Also the video reader has" \
+                                      " video_reader.skip_frames(N) function"
 
     for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
                                          samples=config["repeats"])):
         frames_read = 0
         with av.open(config["video_path"]) as container:
             stream = container.streams.video[0]
-            stream.thread_type = 'AUTO'  # FRAME
+            stream.thread_type = "AUTO"  # FRAME
             for img in tqdm(container.decode(stream),
-                              desc=f"Decoding",
-                              unit="f"
-                              ):
+                            desc=f"Decoding",
+                            unit="f"
+                            ):
                 img.to_ndarray(format="bgr24")
 
                 if config["show_img"]:
@@ -405,18 +411,22 @@ def pyav_benchmark(config):
 
             timer.stop()
             assert frames_read == config["n_frames"]
-            del img
+            try:
+                del img
+            except NameError:
+                pass
+
 
 def ffmpeg_benchmark(config):
-
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "decord_sequential_cpu_benchmark; note it has inbuilt" \
                                             "support for this. "
-    assert config["downsample"] == 1, "TODO: implement downsampling, note that decord has options " \
-                                      "" \
+    assert config["downsample"] == 1, "TODO: implement downsampling, note that " \
+                                      "decord has options " \
                                       "to sample frames every N frames" \
                                       " https://github.com/dmlc/decord#videoloader" \
-                                      "Also the video reader has vr.skip_frames(N) function"
+                                      "Also the video reader has " \
+                                      "video_reader.skip_frames(N) function"
 
     ffmpegstream = FFMPEGStream(config["video_path"])
     ffmpeg_raw_time_taken = []
@@ -442,19 +452,19 @@ def ffmpeg_benchmark(config):
         timer.stop()
         assert frames_read == config["n_frames"]
         print(f"NOTE: FFMPEG actually read the file at:"
-              f" {config['n_frames']/(time_after-time_before)}"
+              f" {config['n_frames'] / (time_after - time_before)}"
               f" FPS but the resulting FPS is much lower as we then block n_frames worth on the "
               f"consumer")
         del ffmpegstream
         ffmpegstream = FFMPEGStream(config["video_path"])
-        ffmpeg_raw_time_taken.append(time_after-time_before)
-
+        ffmpeg_raw_time_taken.append(time_after - time_before)
 
     del ffmpegstream
     return ffmpeg_raw_time_taken
 
+
 if __name__ == "__main__":
-    config = {
+    CONFIG = {
         "video_path":
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
                 "assets/video_720x480.mkv")),
@@ -466,13 +476,13 @@ if __name__ == "__main__":
         "consumer_blocking_config": {"io_limited": False,
                                      "duration": 0.005},
     }
-    # max_possible_fps(config)
-    # baseline_benchmark(config)
-    # imutils_benchmark(config, 96)
-    # camgears_benchmark(config, 96)
-    # camgears_with_queue_benchmark(config, 96)
-    # multiproc_benchmark(config)
-    # decord_sequential_cpu_benchmark(config)
-    # decord_batch_cpu_benchmark(config, 96)
-    # pyav_benchmark(config)
-    ffmpeg_benchmark(config)
+    # max_possible_fps(CONFIG)
+    # baseline_benchmark(CONFIG)
+    # imutils_benchmark(CONFIG, 96)
+    # camgears_benchmark(CONFIG, 96)
+    # camgears_with_queue_benchmark(CONFIG, 96)
+    # multiproc_benchmark(CONFIG)
+    # decord_sequential_cpu_benchmark(CONFIG)
+    # decord_batch_cpu_benchmark(CONFIG, 96)
+    # pyav_benchmark(CONFIG)
+    ffmpeg_benchmark(CONFIG)

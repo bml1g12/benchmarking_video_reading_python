@@ -1,8 +1,0 @@
-,groupname,time_per_frame,stddev_for_all_frames,fps,time_for_all_frames
-0,baseline_benchmark,0.0105,0.4202,94.8490347053171,10.5
-1,queue_1thread_module,0.0096,0.3644,104.623563150713,9.6
-2,mp_queue_1proc_benchmark,0.0312,0.1961,32.0143637409846,31.2
-3,queue_multithread_module,0.0093,0.1131,107.139941386741,9.3
-4,mp_queue_multiproc_benchmark,0.0145,0.7472,68.876334638513,14.5
-5,mp_queue_multiproc_shared_memory_benchmark,0.0106,0.0253,94.5010999250069,10.6
-6,mp_queue_multiproc_benchmark_arrayqueuelibrary,0.0136,1.3582,73.7110822950091,13.6
