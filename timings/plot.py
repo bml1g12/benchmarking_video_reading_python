@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-cpu = pd.read_csv("benchmark_timings_cpulimited.csv")
+unblocked = pd.read_csv("benchmark_timings_unblocked.csv")
 io = pd.read_csv("benchmark_timings_iolimited.csv")
-unblocked = pd.read_csv("benchmark_timings_iolimited.csv")
-
+cpu = pd.read_csv("benchmark_timings_cpulimited.csv")
+unblocked = unblocked[~unblocked.groupname.str.contains("max_possible_fps")]
 
 def plot(df, title):
     """plots graphs of timings"""
