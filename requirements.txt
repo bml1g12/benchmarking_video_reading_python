@@ -9,3 +9,4 @@ pandas==1.0.1
 imutils==0.5.3
 vidgear==0.1.9
 decord==0.4.2
+timing
