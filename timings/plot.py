@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-
+from matplotlib.lines import Line2D
 
 
 
@@ -11,7 +11,7 @@ def fps_plot(df, title):
     """plots graphs of timings"""
     df = df[~df.groupname.str.contains("ffmpeg_unblocked_decoding_speed")]
     df["groupname"] = df.groupname.str.split("_benchmark", expand=True)[0]
-    sns.set(font_scale=1.8)
+    sns.set(font_scale=2)
     g = sns.catplot(data=df, kind="bar",
                     x="groupname", y="fps", palette="dark", alpha=.6, height=5, aspect=5,
                     legend=True, legend_out=True)
@@ -29,7 +29,7 @@ def combined_plot(df, title):
     # by using a global color mapping we ensure consistent colors between graph
     palette = [GLOBAL_COLOR_MAPPINGS[group] for group in df.groupname.values]
 
-    sns.set(font_scale=2.1)
+    sns.set(font_scale=3)
 
     def barplot_err(x, y, xerr=None, yerr=None, data=None, **kwargs):
         """Plot a bar graph with hand defined symmetrical error bars"""
@@ -54,15 +54,24 @@ def combined_plot(df, title):
     _, ax = plt.subplots(figsize=(35, 10))
     _ax = barplot_err(x="groupname", y="time_for_all_frames", yerr="stddev_for_all_frames",
                       capsize=.2, data=df, ax=ax, palette=palette)
+    _ax.set_xticklabels([])  # remove labels on each bar
+    legend_markers = []
+    legend_labels = []
     for _, row in df.iterrows():
         print(row.name, row.time_for_all_frames - row.time_for_all_frames * 0.5)
         _ax.text(row.name, row.time_for_all_frames - row.time_for_all_frames * 0.5,
                  f"{int(round(row.fps, 0))} FPS", color="black", ha="center", va="bottom")
-
+        # plot legend
+        rect = Line2D([], [], marker="s", markersize=30, linewidth=0, color=palette[_])
+        legend_markers.append(rect)
+        legend_labels.append(row.groupname)
+    print("labels", legend_labels)
+    _ax.legend(legend_markers, legend_labels, bbox_to_anchor=(1.01, 1), borderaxespad=0)
     plt.xlabel(title)
     plt.ylabel("Time to process 1000 frames (s)")
     plt.tight_layout()
     plt.savefig(title + ".png")
+    return _ax
 
 suffix = "_video_720x480.csv"
 
