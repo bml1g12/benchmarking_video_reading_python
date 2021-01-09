@@ -419,7 +419,7 @@ def pyav_benchmark(config):
             stream = container.streams.video[0]
             stream.thread_type = "AUTO"  # FRAME
             for img in tqdm(container.decode(stream),
-                            desc=f"Decoding",
+                            desc="Decoding",
                             unit="f"
                             ):
                 img.to_ndarray(format="bgr24")
