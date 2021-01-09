@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         # ffmpeg related
-        sudo apt-get update && sudo apt-get install ffmpeg libsm6 libxrender-dev 
+        sudo apt-get update && sudo apt-get install ffmpeg libsm6 libxrender-dev libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good 
 
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt
