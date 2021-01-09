@@ -4,6 +4,8 @@ Tested using Python 3.7.0 on Ubuntu 20.04 LTS with Intel(R) Core(TM) i7-7700HQ C
 
 Hard disk: Sequential Read - 560 MB/s CT2000MX500SSD1 Crucial MX500 2TB 3D NAND SATA 2.5 inch 7mm (with 9.5mm adapter) Internal SSD
 
+The `baseline` benchmark is a simple cv2.VideoCapture() reader with .read() method in serial. 
+
 In these benchmarks I compare the speed of sequentially reading a file; if one wishes to sample frames across a file, Decord maybe a good option, especially if its part of a machine learning pipeline as it has automatic conversion to PyTorch/Tensorflow arrays. 
 
 Note: In the below I am varying whether the CONSUMER of frames is blocked via IO or CPU limitations, whereby the consumer is calling a producer video reader library which reads a video file as fast as my hard disk allows (i.e. I am not applying a blocking call inside the reader, which might emulate e.g. reading a huge video file, but instead emulating the more common use case of an application that gets blocked during processing of that video file). 

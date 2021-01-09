@@ -11,7 +11,7 @@ def fps_plot(df, title):
     """plots graphs of timings"""
     df = df[~df.groupname.str.contains("ffmpeg_unblocked_decoding_speed")]
     df["groupname"] = df.groupname.str.split("_benchmark", expand=True)[0]
-    sns.set(font_scale=1.5)
+    sns.set(font_scale=1.8)
     g = sns.catplot(data=df, kind="bar",
                     x="groupname", y="fps", palette="dark", alpha=.6, height=5, aspect=5,
                     legend=True, legend_out=True)
@@ -21,9 +21,6 @@ def fps_plot(df, title):
 
 def combined_plot(df, title):
     """plots graphs of timings"""
-
-
-
     df["groupname"] = df.groupname.str.split("_benchmark", expand=True)[0]
     # This item is not needed given we have an unblocked graph
     df = df[~df.groupname.str.contains("ffmpeg_unblocked_decoding_speed")].reset_index()
@@ -32,7 +29,7 @@ def combined_plot(df, title):
     # by using a global color mapping we ensure consistent colors between graph
     palette = [GLOBAL_COLOR_MAPPINGS[group] for group in df.groupname.values]
 
-    sns.set(font_scale=1.5)
+    sns.set(font_scale=2.1)
 
     def barplot_err(x, y, xerr=None, yerr=None, data=None, **kwargs):
         """Plot a bar graph with hand defined symmetrical error bars"""
