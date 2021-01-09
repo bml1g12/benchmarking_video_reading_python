@@ -23,11 +23,15 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Checkout github repo (+ download lfs dependencies)
+      uses: actions/checkout@v2
+      with:
+        lfs: true
+    - name: Checkout LFS objects
+      run: git lfs checkout
     - name: Install dependencies
       run: |
         # ffmpeg related
-        git lfs install
-        git lfs pull 
         sudo apt-get update && sudo apt-get install ffmpeg libsm6 libxrender-dev libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good libavcodec-dev libavformat-dev libavdevice-dev 
 
         python -m pip install --upgrade pip
