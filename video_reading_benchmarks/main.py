@@ -19,6 +19,8 @@ parser.add_argument("--isiolimited", action="store_true",
                     help="whether to emulate io or cpu limited consumer")
 parser.add_argument("--duration", type=float, default=0.005,
                     help="whether to emulate io or cpu limited consumer")
+parser.add_argument("--inputvideo", type=str, default="assets/video_720x480.mkv",
+                    help="whether to emulate io or cpu limited consumer")
 
 _TIME = timing.get_timing_group(__name__)
 
@@ -53,7 +55,7 @@ def main():
     config = {
         "video_path":
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
-                "assets/video_720x480.mkv")),
+                args.inputvideo)),
         "n_frames": 1000,
         "repeats": 3,
         "resize_shape": False,  # (320, 240),
@@ -62,6 +64,7 @@ def main():
         "consumer_blocking_config": {"io_limited": False,
                                      "duration": args.duration},
     }
+    print("video:", config["video_path"])
 
     config["consumer_blocking_config"]["io_limited"] = args.isiolimited
     print("Is IO Limited benchmark?", config["consumer_blocking_config"]["io_limited"])
@@ -128,11 +131,11 @@ def main():
     df = pd.DataFrame(timings)
 
     if config["consumer_blocking_config"]["duration"] == 0:
-        string_suffix = "unblocked"
+        string_suffix = "unblocked_" + Path(args.inputvideo).stem
     elif config["consumer_blocking_config"]["io_limited"]:
-        string_suffix = "iolimited"
+        string_suffix = "iolimited_" + Path(args.inputvideo).stem
     else:
-        string_suffix = "cpulimited"
+        string_suffix = "cpulimited_" + Path(args.inputvideo).stem
 
     filename = f"timings/benchmark_timings_{string_suffix}.csv"
 

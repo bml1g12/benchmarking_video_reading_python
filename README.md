@@ -4,13 +4,33 @@ Tested using Python 3.7.0 on Ubuntu 20.04 LTS with Intel(R) Core(TM) i7-7700HQ C
 
 Hard disk: Sequential Read - 560 MB/s CT2000MX500SSD1 Crucial MX500 2TB 3D NAND SATA 2.5 inch 7mm (with 9.5mm adapter) Internal SSD
 
+In these benchmarks I compare the speed of sequentially reading a file; if one wishes to sample frames across a file, Decord maybe a good option, especially if its part of a machine learning pipeline as it has automatic conversion to PyTorch/Tensorflow arrays. 
+
 Note: In the below I am varying whether the CONSUMER of frames is blocked via IO or CPU limitations, whereby the consumer is calling a producer video reader library which reads a video file as fast as my hard disk allows (i.e. I am not applying a blocking call inside the reader, which might emulate e.g. reading a huge video file, but instead emulating the more common use case of an application that gets blocked during processing of that video file). 
 
-![Unblocked](timings/Unblocked.png)
+### Low Resolution input video (480x270 pixels)
 
-![IO Limited](timings/IO_Limited.png)
+![Unblocked](timings/Unblocked_video_480x270.png)
 
-![CPU Limited](timings/CPU_Limited.png)
+![IO Limited](timings/IOLimited_video_480x270.png)
+
+![CPU Limited](timings/CPULimited_video_480x270.png)
+
+### Medium Resolution input video (720x480 pixels)
+
+![Unblocked](timings/Unblocked_video_720x480.png)
+
+![IO Limited](timings/IOLimited_video_720x480.png)
+
+![CPU Limited](timings/CPULimited_video_720x480.png)
+
+### High Resolution input video (1920x1080 pixels)
+
+![Unblocked](timings/Unblocked_video_1920x1080.png)
+
+![IO Limited](timings/IOLimited_video_1920x1080.png)
+
+![CPU Limited](timings/CPULimited_video_1920x1080.png)
 
 ## How To Run 
 
@@ -25,12 +45,3 @@ Note: In the below I am varying whether the CONSUMER of frames is blocked via IO
 Timings can be found in the ./timings folder.
 
 Timings are reported over 1000 frames as `time_for_all_frames` (seconds) +/- `stddev_for_all_frames` (seconds)  with this standard deviation calculatied over 3 repeats. `time_per_frame` is calculated as `time_for_all_frames`/1000 and the FPS is calculated as 1/`time_per_frame`.
-
-
-## To Do
-
-Look into https://medium.com/@haydenfaulkner/extracting-frames-fast-from-a-video-using-opencv-and-python-73b9b7dc9661 ...their CV2 implementation relies on the .set method of cv2.VideoCapture which is buggy https://github.com/opencv/opencv/issues/9053 unless one works around it with something like https://gist.github.com/bml1g12/e1e0af85e49bf46cccddbcf8e68a3708 I believe.
-
-Decord however looks very promising; and even has inbuilt bridges to numpy, PyTorch Tensor and Tensorflow Tensor. https://github.com/dmlc/decord#bridges-for-deep-learning-frameworks 
-
-Try PyAV  https://pyav.org/docs/develop/

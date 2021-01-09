@@ -5,3 +5,12 @@ assets/video_720x480.mkv filter=lfs diff=lfs merge=lfs -text
 timings/CPU_Limited.png filter=lfs diff=lfs merge=lfs -text
 timings/IO_Limited.png filter=lfs diff=lfs merge=lfs -text
 timings/Unblocked.png filter=lfs diff=lfs merge=lfs -text
+timings/Unblocked_video_1920x1080.png filter=lfs diff=lfs merge=lfs -text
+timings/Unblocked_video_720x480.png filter=lfs diff=lfs merge=lfs -text
+timings/CPULimited_video_1920x1080.png filter=lfs diff=lfs merge=lfs -text
+timings/CPULimited_video_720x480.png filter=lfs diff=lfs merge=lfs -text
+timings/IOLimited_video_480x270.png filter=lfs diff=lfs merge=lfs -text
+timings/Unblocked_video_480x270.png filter=lfs diff=lfs merge=lfs -text
+timings/CPULimited_video_480x270.png filter=lfs diff=lfs merge=lfs -text
+timings/IOLimited_video_1920x1080.png filter=lfs diff=lfs merge=lfs -text
+timings/IOLimited_video_720x480.png filter=lfs diff=lfs merge=lfs -text
