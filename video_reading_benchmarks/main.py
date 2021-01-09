@@ -1,10 +1,11 @@
+"""Perform suite of video reading benchmarks"""
 import argparse
 from pathlib import Path
 
-import timing
-import time
-import pandas as pd
 import numpy as np
+import pandas as pd
+import timing
+from imutils.video import count_frames
 
 import video_reading_benchmarks
 from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benchmark, \
@@ -12,21 +13,20 @@ from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benc
     decord_sequential_cpu_benchmark, decord_batch_cpu_benchmark, pyav_benchmark, ffmpeg_benchmark, \
     max_possible_fps
 from video_reading_benchmarks.shared import get_timings
-from video_reading_benchmarks.shared import patch_threading_excepthook
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--isiolimited", action="store_true",
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument("--isiolimited", action="store_true",
                     help="whether to emulate io or cpu limited consumer")
-parser.add_argument("--duration", type=float, default=0.005,
+PARSER.add_argument("--duration", type=float, default=0.005,
                     help="whether to emulate io or cpu limited consumer")
-parser.add_argument("--inputvideo", type=str, default="assets/video_720x480.mkv",
+PARSER.add_argument("--inputvideo", type=str, default="assets/video_720x480.mkv",
                     help="whether to emulate io or cpu limited consumer")
 
 _TIME = timing.get_timing_group(__name__)
 
 
-def count_frames(config):
-    from imutils.video import count_frames
+def assert_video_frames_appropriate_for_benchmark(config):
+    """Asserts the number of frames in the video are appropriate for the benchmark"""
     print("counting frames in input")
     frame_count = count_frames(config["video_path"])
     print("frames counted: ", frame_count)
@@ -36,6 +36,7 @@ def count_frames(config):
 
 
 def convert_timings_list_to_dict(groupname, timings_list, n_frames):
+    """Formats the timings list provided into a dictionary"""
     timings_array = np.array(timings_list)
 
     return {"groupname": groupname,
@@ -45,13 +46,11 @@ def convert_timings_list_to_dict(groupname, timings_list, n_frames):
             "fps": (n_frames / timings_array).mean()}
 
 
-def main():
-    # print("enabling threading patch")
-    # patch_threading_excepthook()
-    # print("threading patch enabled")
+def main():  #pylint: disable = too-many-statements
+    """Perform benchamrks according to command line arguments provided"""
     timings = []
 
-    args = parser.parse_args()
+    args = PARSER.parse_args()
     config = {
         "video_path":
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
@@ -69,7 +68,7 @@ def main():
     config["consumer_blocking_config"]["io_limited"] = args.isiolimited
     print("Is IO Limited benchmark?", config["consumer_blocking_config"]["io_limited"])
     print("Blocking duration: ", config["consumer_blocking_config"]["duration"])
-    # count_frames(config)
+    # assert_video_frames_appropriate_for_benchmark(config)
 
     metagroupname = "video_reading_benchmarks.benchmarks"
 
@@ -146,4 +145,4 @@ def main():
 
 
 if __name__ == "__main__":
-    df = main()
+    DF = main()

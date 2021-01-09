@@ -28,6 +28,8 @@ _TIME = timing.get_timing_group(__name__)
 
 
 def max_possible_fps(config):
+    """The max possible FPS if video reading was instantaneous i.e.
+    just a blocking application on the consumer."""
     for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
                                          samples=3)):
         for _ in tqdm(range(config["n_frames"])):
@@ -38,6 +40,7 @@ def max_possible_fps(config):
 
 
 def baseline_benchmark(config):
+    """Baseline benchmark using cv2.VideoCapture()'s .read() method."""
     cap = cv2.VideoCapture(config["video_path"])
     for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
                                          samples=config["repeats"])):
@@ -82,6 +85,12 @@ def baseline_benchmark(config):
 
 
 def imutils_benchmark(config, buffer_size):
+    """Benchmarking the imutils library with slight modification to allow downsampling
+    and resizing.
+
+    :param dict config:
+    :param int buffer_size: max number of frames that can be cached in memory
+    """
     if config["resize_shape"]:
         tranform_f = partial(tranform_tmp, config["resize_shape"])
     else:
@@ -125,6 +134,12 @@ def imutils_benchmark(config, buffer_size):
 
 
 def camgears_benchmark(config, buffer_size):
+    """Benchmarking the vidgeats.camgears library with slight modification to allow downsampling
+    and resizing and custom buffersize (default 96 in the source).
+
+    :param dict config:
+    :param int buffer_size: max number of frames that can be cached in memory
+    """
     if config["resize_shape"]:
         tranform_f = partial(tranform_tmp, config["resize_shape"])
     else:
@@ -169,6 +184,12 @@ def camgears_benchmark(config, buffer_size):
 
 
 def camgears_with_queue_benchmark(config, buffer_size):
+    """Benchmarking significant modification of camgears implementation to switch collections.deque
+    to a queue.Queue()
+
+    :param dict config:
+    :param int buffer_size: max number of frames that can be cached in memory
+    """
     if config["resize_shape"]:
         tranform_f = partial(tranform_tmp, config["resize_shape"])
     else:
@@ -213,6 +234,7 @@ def camgears_with_queue_benchmark(config, buffer_size):
 
 
 def _prepare_shared_memory(np_arr_shape):
+    """Utiltiy function for multiproc_benchmark()"""
     mp_array = mp.Array("I", int(np.prod(np_arr_shape)), lock=mp.Lock())
     np_array = np.frombuffer(mp_array.get_obj(), dtype="I").reshape(np_arr_shape)
     shared_memory = (mp_array, np_array)
@@ -220,6 +242,9 @@ def _prepare_shared_memory(np_arr_shape):
 
 
 def multiproc_benchmark(config):
+    """Benchmarking a multiprocessed (not multithreaded) video reader. Uses shared memory
+    as serializing queues is very slow with multiprocesing.Queue()
+    https://benjamin-lowe.medium.com/using-numpy-efficiently-between-processes-1bee17dcb01"""
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "multiproc_benchmark"
     np_arr_shape = get_video_shape(config["video_path"])
@@ -260,6 +285,7 @@ def multiproc_benchmark(config):
 
 
 def decord_sequential_cpu_benchmark(config):
+    """Benchmarking decord library with seqeuential read"""
     device = "cpu"
     if device == "gpu":
         ctx = decord.gpu(0)
@@ -311,6 +337,7 @@ def decord_sequential_cpu_benchmark(config):
 
 
 def decord_batch_cpu_benchmark(config, buffer_size):
+    """Benchmarking decord library with a batched implementation for reaching sequentially"""
     device = "cpu"
     if device == "gpu":
         ctx = decord.gpu(0)
@@ -363,7 +390,7 @@ def decord_batch_cpu_benchmark(config, buffer_size):
         timer.stop()
         video_loader.reset()
         try:
-            del img
+            del img  # pylint: disable = undefined-loop-variable
         except NameError:
             pass
 
@@ -374,6 +401,7 @@ def decord_batch_cpu_benchmark(config, buffer_size):
 
 
 def pyav_benchmark(config):
+    """Benchmarking pyav library for sequential viddeo reading."""
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "decord_sequential_cpu_benchmark; note it has inbuilt" \
                                             "support for this. "
@@ -412,12 +440,14 @@ def pyav_benchmark(config):
             timer.stop()
             assert frames_read == config["n_frames"]
             try:
-                del img
+                del img  # pylint: disable = undefined-loop-variable
             except NameError:
                 pass
 
 
 def ffmpeg_benchmark(config):
+    """Benchaming ffmpeg-python library for video reading,
+     which is a light wrapper around ffmpeg."""
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "decord_sequential_cpu_benchmark; note it has inbuilt" \
                                             "support for this. "
