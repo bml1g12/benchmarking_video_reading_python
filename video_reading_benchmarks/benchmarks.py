@@ -232,6 +232,45 @@ def camgears_with_queue_benchmark(config, buffer_size):
     del cap
     cv2.destroyAllWindows()
 
+def camgears_with_queue_official_benchmark(config):
+    """Benchmarking official camgears implementation to switch collections.deque
+    to a queue.Queue()
+
+    :param dict config:
+    """
+    from vidgear.gears.camgear import CamGear
+
+    cap = CamGear(source=str(config["video_path"])).start()
+
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        frames_read = 0
+        for _ in tqdm(range(config["n_frames"])):
+            img = cap.read()
+            if img is None:
+                break
+
+            if config["show_img"]:
+                cv2.imshow("img", img)
+                k = cv2.waitKey(1)
+                if ord("q") == k:
+                    break
+
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+
+            frames_read += 1
+        assert frames_read == config["n_frames"]
+        timer.stop()
+        cap.stop()
+        del img
+        del cap
+        # recreate for next repeat
+        cap = CamGear(source=str(config["video_path"])).start()
+    cap.stop()
+    del cap
+    cv2.destroyAllWindows()
+
 
 def _prepare_shared_memory(np_arr_shape):
     """Utiltiy function for multiproc_benchmark()"""
@@ -515,4 +554,5 @@ if __name__ == "__main__":
     # decord_sequential_cpu_benchmark(CONFIG)
     # decord_batch_cpu_benchmark(CONFIG, 96)
     # pyav_benchmark(CONFIG)
-    ffmpeg_benchmark(CONFIG)
+    #ffmpeg_benchmark(CONFIG)
+    camgears_with_queue_official_benchmark(CONFIG)
