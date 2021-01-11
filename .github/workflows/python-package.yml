@@ -49,4 +49,4 @@ jobs:
         pylint video_reading_benchmarks/
     - name: Run the benchmarks software
       run: |
-        ./run.sh
+        ./ci.sh
