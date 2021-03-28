@@ -14,3 +14,4 @@ timings/Unblocked_video_480x270.png filter=lfs diff=lfs merge=lfs -text
 timings/CPULimited_video_480x270.png filter=lfs diff=lfs merge=lfs -text
 timings/IOLimited_video_1920x1080.png filter=lfs diff=lfs merge=lfs -text
 timings/IOLimited_video_720x480.png filter=lfs diff=lfs merge=lfs -text
+.png filter=lfs diff=lfs merge=lfs -text

@@ -4,13 +4,13 @@ import multiprocessing as mp
 import time
 from functools import partial
 from pathlib import Path
+import timing
+from tqdm import tqdm
 
 import av
 import cv2
 import decord
 import numpy as np
-import timing
-from tqdm import tqdm
 
 import video_reading_benchmarks
 from video_reading_benchmarks.camgear.camgear import CamGear
@@ -23,7 +23,7 @@ from video_reading_benchmarks.shared import blocking_call, tranform_tmp
 
 # from vidgear.gears import CamGear
 # from decord import VideoLoader
-
+print(__name__)
 _TIME = timing.get_timing_group(__name__)
 
 
@@ -233,12 +233,15 @@ def camgears_with_queue_benchmark(config, buffer_size):
     cv2.destroyAllWindows()
 
 def camgears_with_queue_official_benchmark(config):
-    """Benchmarking official camgears implementation to switch collections.deque
-    to a queue.Queue()
+    """Benchmarking official camgears implementation vidgear==0.1.9
+    Note that next update will be switching to essentially the same as
+    camgears_with_queue_benchmark() implementation
+     https://github.com/abhiTronix/vidgear/pull/196/commits/3f7a6fd9efc456fbdbbb3a9394c816641701e8cf
+
 
     :param dict config:
     """
-    from vidgear.gears.camgear import CamGear
+    from vidgear.gears.camgear import CamGear  #pylint: disable = redefined-outer-name, reimported, import-outside-toplevel
 
     cap = CamGear(source=str(config["video_path"])).start()
 
@@ -536,23 +539,23 @@ if __name__ == "__main__":
     CONFIG = {
         "video_path":
             str(Path(video_reading_benchmarks.__file__).parent.parent.joinpath(
-                "assets/video_720x480.mkv")),
+                "assets/video_1920x1080.mkv")),
         "n_frames": 1000,
         "repeats": 3,
         "resize_shape": False,  # (320, 240),
         "show_img": False,
         "downsample": 1,
         "consumer_blocking_config": {"io_limited": False,
-                                     "duration": 0.005},
+                                     "duration": 0},
     }
-    # max_possible_fps(CONFIG)
-    # baseline_benchmark(CONFIG)
-    # imutils_benchmark(CONFIG, 96)
-    # camgears_benchmark(CONFIG, 96)
-    # camgears_with_queue_benchmark(CONFIG, 96)
-    # multiproc_benchmark(CONFIG)
-    # decord_sequential_cpu_benchmark(CONFIG)
-    # decord_batch_cpu_benchmark(CONFIG, 96)
-    # pyav_benchmark(CONFIG)
-    #ffmpeg_benchmark(CONFIG)
+    max_possible_fps(CONFIG)
+    baseline_benchmark(CONFIG)
+    imutils_benchmark(CONFIG, 96)
+    camgears_benchmark(CONFIG, 96)
+    camgears_with_queue_benchmark(CONFIG, 96)
+    multiproc_benchmark(CONFIG)
+    decord_sequential_cpu_benchmark(CONFIG)
+    decord_batch_cpu_benchmark(CONFIG, 96)
+    pyav_benchmark(CONFIG)
+    ffmpeg_benchmark(CONFIG)
     camgears_with_queue_official_benchmark(CONFIG)

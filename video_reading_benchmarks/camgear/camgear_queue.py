@@ -323,7 +323,7 @@ class CamGear: #pylint: disable = too-many-instance-attributes
         and blocks the thread if the deque is full.
         **Returns:** A n-dimensional numpy array.
         """
-
+        print("bml mod")
         while self.__threaded_queue_mode:
             return self.__queue.get()
 

@@ -11,7 +11,7 @@ import video_reading_benchmarks
 from video_reading_benchmarks.benchmarks import baseline_benchmark, imutils_benchmark, \
     camgears_benchmark, camgears_with_queue_benchmark, multiproc_benchmark, \
     decord_sequential_cpu_benchmark, decord_batch_cpu_benchmark, pyav_benchmark, ffmpeg_benchmark, \
-    max_possible_fps
+    max_possible_fps, camgears_with_queue_official_benchmark
 from video_reading_benchmarks.shared import get_timings
 
 PARSER = argparse.ArgumentParser()
@@ -106,6 +106,9 @@ def main():  #pylint: disable = too-many-statements
     print("Starting camgears_with_queue_benchmark")
     camgears_with_queue_benchmark(config, buffer_size=96)
 
+    print("Starting camgears_with_queue_official_benchmark")
+    camgears_with_queue_official_benchmark(config)
+
     timings.append(get_timings(metagroupname, "max_possible_fps",
                                times_calculated_over_n_frames=config["n_frames"]))
     timings.append(get_timings(metagroupname, "baseline_benchmark",
@@ -126,6 +129,8 @@ def main():  #pylint: disable = too-many-statements
                                times_calculated_over_n_frames=config["n_frames"]))
     timings.append(get_timings(metagroupname, "camgears_with_queue_benchmark",
                                times_calculated_over_n_frames=config["n_frames"]))
+    timings.append(get_timings(metagroupname, "camgears_with_queue_official_benchmark",
+                               times_calculated_over_n_frames=config["n_frames"]))
 
     df = pd.DataFrame(timings)
 
@@ -136,7 +141,7 @@ def main():  #pylint: disable = too-many-statements
     else:
         string_suffix = "cpulimited_" + Path(args.inputvideo).stem
 
-    filename = f"timings/benchmark_timings_{string_suffix}.csv"
+    filename = f"timings/ben_camgeat_official_benchmark_timings_{string_suffix}.csv"
 
     df["fps"] = df["fps"].astype("float")
     df = df.sort_values("fps")

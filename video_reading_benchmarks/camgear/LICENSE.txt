@@ -1,3 +1,7 @@
+Copyright © abhiTronix 2019-2020
+Significant Changes made: 
+* Edited camgear.py to  optimise its queue, which ended up becoming part of source code: https://github.com/abhiTronix/vidgear/pull/196/commits/3f7a6fd9efc456fbdbbb3a9394c816641701e8cf
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/

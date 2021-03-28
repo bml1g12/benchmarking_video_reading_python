@@ -36,9 +36,11 @@ Note: In the below I am varying whether the CONSUMER of frames is blocked via IO
 
 ## How To Run 
 
+`git lfs install`
+
 `git lfs pull` # to get video
 
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
 `pip install -e setup.py`
 

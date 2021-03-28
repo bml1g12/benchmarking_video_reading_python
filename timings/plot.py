@@ -51,7 +51,7 @@ def combined_plot(df, title):
 
         return _ax
 
-    _, ax = plt.subplots(figsize=(35, 10))
+    _, ax = plt.subplots(figsize=(40, 10))
     _ax = barplot_err(x="groupname", y="time_for_all_frames", yerr="stddev_for_all_frames",
                       capsize=.2, data=df, ax=ax, palette=palette)
     _ax.set_xticklabels([])  # remove labels on each bar
@@ -70,15 +70,20 @@ def combined_plot(df, title):
     plt.xlabel(title)
     plt.ylabel("Time to process 1000 frames (s)")
     plt.tight_layout()
-    plt.savefig(title + ".png")
+    plt.savefig("tmp_" + title + ".png")
     return _ax
 
-suffix = "_video_720x480.csv"
+def load_df(filename):
+    df = pd.read_csv(filename)
+    df["fps"] = df["fps"].astype("float")
+    df = df.sort_values("fps")
+    df = df[df.groupname != "camgears_with_queue_benchmark"].reset_index()
+    return df
 
-for suffix in ["_video_480x270", "_video_720x480", "_video_1920x1080"]:
-    unblocked = pd.read_csv(f"benchmark_timings_unblocked{suffix}.csv")
-    io = pd.read_csv(f"benchmark_timings_iolimited{suffix}.csv")
-    cpu = pd.read_csv(f"benchmark_timings_cpulimited{suffix}.csv")
+for suffix in ["_video_1920x1080"]:
+    unblocked = load_df(f"benchmark_timings_unblocked{suffix}.csv")
+    io = load_df(f"benchmark_timings_iolimited{suffix}.csv")
+    cpu = load_df(f"benchmark_timings_cpulimited{suffix}.csv")
     #unblocked = unblocked[~unblocked.groupname.str.contains("max_possible_fps")].reset_index()
 
     tmp_palette = sns.color_palette("hls", len(unblocked.groupname))
