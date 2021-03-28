@@ -16,3 +16,5 @@ timings/IOLimited_video_1920x1080.png filter=lfs diff=lfs merge=lfs -text
 timings/IOLimited_video_720x480.png filter=lfs diff=lfs merge=lfs -text
 .png filter=lfs diff=lfs merge=lfs -text
 mkv filter=lfs diff=lfs merge=lfs -text
+assets/video_1920x1080.mkv filter=lfs diff=lfs merge=lfs -text
+assets/video_480x270.mkv filter=lfs diff=lfs merge=lfs -text
