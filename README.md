@@ -49,3 +49,7 @@ Note: In the below I am varying whether the CONSUMER of frames is blocked via IO
 Timings can be found in the ./timings folder.
 
 Timings are reported over 1000 frames as `time_for_all_frames` (seconds) +/- `stddev_for_all_frames` (seconds)  with this standard deviation calculatied over 3 repeats. `time_per_frame` is calculated as `time_for_all_frames`/1000 and the FPS is calculated as 1/`time_per_frame`.
+
+# Future Work
+
+Would like to investigate this library: https://github.com/KevinKecc/diva_io/blob/master/docs/speed.md
