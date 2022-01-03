@@ -1,5 +1,5 @@
-"""Optionally install benchmarks as a module"""
 #!/usr/bin/env python
+"""Optionally install benchmarks as a module"""
 
 import setuptools
 
