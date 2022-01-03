@@ -44,6 +44,8 @@ Note: In the below I am varying whether the CONSUMER of frames is blocked via IO
 
 `pip install -e setup.py`
 
+`python video_reading_benchmarks/main.py`
+
 ## Output
 
 Timings can be found in the ./timings folder.
