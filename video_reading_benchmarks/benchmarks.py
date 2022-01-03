@@ -16,6 +16,8 @@ import video_reading_benchmarks
 from video_reading_benchmarks.camgear.camgear import CamGear
 from video_reading_benchmarks.camgear.camgear_queue import CamGear as CamGearWithQueue
 from video_reading_benchmarks.ffmpeg_python.test import FFMPEGStream
+from video_reading_benchmarks.ffmpeg_python.videostream_upgraded import VideoStream as \
+    FFMPEGStreamUpgraded
 from video_reading_benchmarks.imutils.custom_filevideostream import FileVideoStreamWithDownsampling
 from video_reading_benchmarks.multiproc.mulitprocreader import read_video_worker, consume_frame, \
     get_video_shape
@@ -488,7 +490,7 @@ def pyav_benchmark(config):
 
 
 def ffmpeg_benchmark(config):
-    """Benchaming ffmpeg-python library for video reading,
+    """Benchmarking ffmpeg-python library for video reading,
      which is a light wrapper around ffmpeg."""
     assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
                                             "decord_sequential_cpu_benchmark; note it has inbuilt" \
@@ -535,6 +537,50 @@ def ffmpeg_benchmark(config):
     return ffmpeg_raw_time_taken
 
 
+
+def ffmpeg_upgraded_benchmark(config):
+    """Benchmarking ffmpeg-python library for video reading,
+     which is a light wrapper around ffmpeg."""
+    assert config["resize_shape"] is False, "TODO: implement tranformation of image size for " \
+                                            "decord_sequential_cpu_benchmark; note it has inbuilt" \
+                                            "support for this. "
+    assert config["downsample"] == 1, "TODO: implement downsampling, note that " \
+                                      "decord has options " \
+                                      "to sample frames every N frames" \
+                                      " https://github.com/dmlc/decord#videoloader" \
+                                      "Also the video reader has " \
+                                      "video_reader.skip_frames(N) function"
+
+    cap = FFMPEGStreamUpgraded(config["video_path"])
+    for timer in tqdm(_TIME.measure_many(inspect.currentframe().f_code.co_name,
+                                         samples=config["repeats"])):
+        cap.open_stream()
+        frames_read = 0
+        while True:
+            eof, img = cap.read()
+            arr = np.frombuffer(img, np.uint8).reshape(int(cap._shape[1] * 1.5), cap._shape[0])
+            bgr = cv2.cvtColor(arr, cv2.COLOR_YUV2BGR_I420)
+            if eof:
+                break
+            if config["show_img"]:
+                cv2.imshow("img", bgr)
+                k = cv2.waitKey(1)
+                if ord("q") == k:
+                    break
+            blocking_call(config["consumer_blocking_config"]["io_limited"],
+                          config["consumer_blocking_config"]["duration"])
+            frames_read += 1
+            if frames_read == config["n_frames"]:
+                break
+
+        timer.stop()
+        assert frames_read == config["n_frames"], f"frames read was {frames_read} not " \
+                                                  f"{config['n_frames']}"
+        del cap
+        cap = FFMPEGStreamUpgraded(config["video_path"])
+    del cap
+
+
 if __name__ == "__main__":
     CONFIG = {
         "video_path":
@@ -559,3 +605,5 @@ if __name__ == "__main__":
     pyav_benchmark(CONFIG)
     ffmpeg_benchmark(CONFIG)
     camgears_with_queue_official_benchmark(CONFIG)
+    ffmpeg_benchmark(CONFIG)
+    ffmpeg_upgraded_benchmark(CONFIG)

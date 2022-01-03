@@ -1,3 +1,8 @@
+"""
+Source: 
+https://github.com/opencv/opencv/issues/9053#issuecomment-753954934
+https://github.com/roninpawn/splitRP/blob/Video-Moderation-Tool/videostream.py
+"""
 import ffmpeg
 import numpy as np
 from warnings import warn
