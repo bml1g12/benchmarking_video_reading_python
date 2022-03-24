@@ -53,3 +53,9 @@ Timings are reported over 1000 frames as `time_for_all_frames` (seconds) +/- `st
 # Future Work
 
 Would like to investigate this library: https://github.com/KevinKecc/diva_io/blob/master/docs/speed.md
+
+Would like to also investigate this library: https://abhitronix.github.io/deffcode/latest/examples/basic/
+
+> Good news everyone🎉[...] FFMPEG based DeFFcode Video-Decoder Python Library for resolving this horrible seeking problem. Here's a example to get started:
+https://abhitronix.github.io/deffcode/latest/examples/basic/#saving-keyframes-as-image to achieve precise and robust frame seeking to any time in video.
+Furthermore, You can easily replace OpenCV's Videocapture API with DeFFcode APIs and enjoy all FFmpeg parameters at your fingertips. https://github.com/opencv/opencv/issues/9053#issuecomment-1075834722
