@@ -42,7 +42,7 @@ Note: In the below I am varying whether the CONSUMER of frames is blocked via IO
 
 `pip install -r requirements.txt`
 
-`pip install -e setup.py`
+`pip install -e .`
 
 ## Output
 
