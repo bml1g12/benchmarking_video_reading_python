@@ -44,6 +44,10 @@ Note: In the below I am varying whether the CONSUMER of frames is blocked via IO
 
 `pip install -e .`
 
+Then to run all benchmarks:
+
+`./run.sh`
+
 ## Output
 
 Timings can be found in the ./timings folder.
